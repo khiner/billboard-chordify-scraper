@@ -5,7 +5,7 @@ Scrape chords for billboard top-200 songs
 
 ```shell
 $ pip install -r requirements.txt
-$ python scrape_billboard.py # Defaults to the range [10 years ago, most recent billboard week]
+$ python scrape_billboard.py # Defaults to the range [1 year ago, most recent billboard week]
 ```
 
 ### Using arguments
