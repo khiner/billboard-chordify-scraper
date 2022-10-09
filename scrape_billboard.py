@@ -33,11 +33,11 @@ parser.add_argument('-s', '--start', type=str, required=False, default=(date.tod
 parser.add_argument('-e', '--end', type=str, required=False, default=date.today().strftime(DATE_FORMAT),
     help='End date in YYYY-mm-dd format. Defaults to the most recent saturday with a Billboard chart.')
 parser.add_argument('-c', '--chart', type=str, required=False, default='100',
-    help='Default to "100" for the "Hot-100" list. Other option is "200" for "Billboard-200.')
+    help='Default to "100" for the "Hot-100" list. Other option is "200" for "Billboard-200".')
 parser.add_argument('-o', '--output', type=str, required=False, default='billboard.csv',
     help='The name of the output CSV file (with a .csv suffix). Defaults to "billboard.csv"')
 parser.add_argument('-v', '--verbose', type=bool, required=False, default=True,
-    help='Verbose logging. Default to true.')
+    help='Verbose logging. Defaults to true.')
 args = parser.parse_args()
 
 start_date_in = validate_date(args.start)
