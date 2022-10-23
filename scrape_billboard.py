@@ -123,4 +123,4 @@ while fetching_date <= end_date:
     fetching_date += ONE_WEEK
 
 df = pd.DataFrame(all_chart_rows)
-df.to_csv(args.output, header=True)
+df.to_csv(args.output, header=True, index=False)
