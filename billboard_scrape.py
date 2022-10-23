@@ -40,7 +40,7 @@ parser.add_argument('-e', '--end', type=str, required=False, default=date.today(
 parser.add_argument('-c', '--chart', type=str, required=False, default='100',
                     help='Default to "100" for the "Hot-100" list. Other option is "200" for "Billboard-200".')
 parser.add_argument('-o', '--output', type=str, required=False, default='billboard.csv',
-                    help='The name of the output CSV file (with a .csv suffix). Defaults to "billboard.csv".')
+                    help='The name of the output CSV file (including the .csv suffix). Defaults to "billboard.csv".')
 parser.add_argument('-v', '--verbose', type=bool, required=False, default=True,
                     help='Verbose logging. Defaults to true.')
 args = parser.parse_args()
@@ -122,5 +122,6 @@ while fetching_date <= end_date:
 
     fetching_date += ONE_WEEK
 
+log('\nExporting Billboard CSV file to {}'.format(args.output))
 df = pd.DataFrame(all_chart_rows)
 df.to_csv(args.output, header=True, index=False)

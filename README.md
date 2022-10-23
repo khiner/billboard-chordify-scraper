@@ -8,7 +8,7 @@ Scrape chords for billboard hot-100/top-200 songs.
 
 ```shell
 $ pip install -r requirements.txt
-$ python scrape_billboard.py # Defaults to the range [1 year ago, most recent billboard week]
+$ python billboard_scrape.py # Defaults to the range [1 year ago, most recent billboard week]
 ```
 
 This will create a file called `billboard.csv` with a row per-song-per-week.
@@ -37,7 +37,7 @@ The start and end dates will be rounded to the previous Saturday, which is what 
 Since the requested end date is less than one week ago, results will be limited to the week ending the previous Saturday to ensure the Billboard chart is available:
 
 ```shell
-$ python scrape_billboard.py --start="2016-4-25" --end="2022-10-8"
+$ python billboard_scrape.py --start="2016-4-25" --end="2022-10-8"
 Requested dates: 2016-04-25 to 2022-10-08
 Converted dates: 2016-04-23 to 2022-10-01
 ```
@@ -45,8 +45,8 @@ Converted dates: 2016-04-23 to 2022-10-01
 All option details:
 
 ```shell
-$ python scrape_billboard.py --help
-usage: scrape_billboard.py [-h] [-s START] [-e END] [-c CHART] [-o OUTPUT] [-v VERBOSE]
+$ python billboard_scrape.py --help
+usage: billboard_scrape.py [-h] [-s START] [-e END] [-c CHART] [-o OUTPUT] [-v VERBOSE]
 
 options:
   -h, --help            show this help message and exit
