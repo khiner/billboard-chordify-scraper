@@ -2,8 +2,6 @@
 
 Scrape chords for billboard hot-100/top-200 songs.
 
-(Actively developing. Just the billboard side of things for now.)
-
 ## Install and run
 
 ```shell
@@ -44,6 +42,8 @@ Converted dates: 2016-04-23 to 2022-10-01
 
 All option details:
 
+#### `billboard_scrape`
+
 ```shell
 $ python billboard_scrape.py --help
 usage: billboard_scrape.py [-h] [-s START] [-e END] [-c CHART] [-o OUTPUT] [-v VERBOSE]
@@ -57,6 +57,41 @@ options:
                         Default to "100" for the "Hot-100" list. Other option is "200" for "Billboard-200".
   -o OUTPUT, --output OUTPUT
                         The name of the output CSV file (with a .csv suffix). Defaults to "billboard.csv"
+  -v VERBOSE, --verbose VERBOSE
+                        Verbose logging. Defaults to true.
+```
+
+#### `billboard_reduce`
+
+```shell
+$ python billboard_reduce.py --help
+usage: billboard_reduce.py [-h] [-n TOPN] [-o OUTPUT] [-v VERBOSE] [billboard_csv]
+
+positional arguments:
+  billboard_csv         Path to input Billboard CSV file, as produced by `billboard_scrape.py`. Defaults to "billboard.csv".
+
+options:
+  -h, --help            show this help message and exit
+  -n TOPN, --topn TOPN  The number of top-charting songs (unique across all years) to export for each year. Defaults to 100.
+  -o OUTPUT, --output OUTPUT
+                        The name of the output CSV file (including the .csv suffix). Defaults to "billboard_reduced.csv".
+  -v VERBOSE, --verbose VERBOSE
+                        Verbose logging. Defaults to true.
+```
+
+#### `chordify_scrape`
+
+```shell
+$ python chordify_scrape.py --help
+usage: chordify_scrape.py [-h] [-o OUTPUT] [-v VERBOSE] [billboard_csv]
+
+positional arguments:
+  billboard_csv         Path to input Billboard CSV file, as produced by `billboard_scrape.py` followed by `billboard_reduce.py`. Defaults to "billboard_reduced.csv".
+
+options:
+  -h, --help            show this help message and exit
+  -o OUTPUT, --output OUTPUT
+                        The name of the output CSV file (including the .csv suffix). Defaults to "chordify.csv".
   -v VERBOSE, --verbose VERBOSE
                         Verbose logging. Defaults to true.
 ```
