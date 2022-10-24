@@ -33,7 +33,7 @@ df = pd.read_csv(billboard_csv, parse_dates=['date'])
 
 columns = ['date', 'artist', 'song', 'pos', 'pos_prev', 'pos_peak', 'weeks']
 if set(df.columns) != set(columns):
-    raise ValueError('Expected the Billboard CSV file to have the columns {}, but found {}'.format(columns, list(df.columns)))
+    raise ValueError('Expected the Billboard CSV file to have the columns {}, but found {}'.format(columns, set(df.columns)))
 
 # Add 'year' and 'artist_song' columns to make processing easier.
 log('Creating reduced dataframe...')
@@ -41,7 +41,7 @@ df['year'] = df['date'].dt.year
 df.set_index('year', inplace=True)
 df['artist_song'] = df['artist'] + ': ' + df['song']
 
-# Reduce to top-100 top-charting songs per year, remove the derived columns we added for processing, and use `filter` to reorder columns.
+# Reduce to top-N charting songs per year, remove the derived columns we added for processing, and use `filter` to reorder columns.
 df = df.sort_values(['year', 'pos_peak', 'weeks'], ascending=[True, True, False]) \
     .drop_duplicates(['artist_song']) \
     .groupby(['year']).head(args.topn) \
