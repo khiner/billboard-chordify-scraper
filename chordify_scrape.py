@@ -11,9 +11,6 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 
-# import requests
-# from bs4 import BeautifulSoup
-
 parser = argparse.ArgumentParser()
 # Billboard CSV file is the first argument.
 # `nargs='?'` makes it optional: https://stackoverflow.com/a/4480202/780425
@@ -67,14 +64,20 @@ def find_chord(chord_label_element):
 
 # Ugh, this is nasty, but can't find a better way.
 def find_key_element(root):
+    # The song's key is in a "Transpose" toolbar section.
+    # Ideally, we'd just search for the <a> with the "Transpose" text, but that isn't working for me,
+    # so we look for the element with the `transpose_text` below and locate this "Transpose" element relative to it.
+    # Another complication is that this element appears in slightly different parts of the DOM for different songs :/
+    # We don't get any help from any class names or IDs nearby, since they're all obfuscated.
     transpose_text = 'Change the chords by transposing the key'
-    element = root.find('div', text=transpose_text)
-    if element:
-        return element.parent.parent.parent.select('span > a > span > span')[0]
+    key_selector = 'span > a > span > span'  # Relative to a common ancestor in both cases
+    transpose_element = root.find('div', text=transpose_text)
+    if transpose_element:
+        return transpose_element.parent.parent.parent.select(key_selector)[0]
 
-    element = root.find('span', text=transpose_text)
-    if element:
-        return element.parent.select('span > a > span > span')[0]
+    transpose_element = root.find('span', text=transpose_text)
+    if transpose_element:
+        return transpose_element.parent.select(key_selector)[0]
 
     return None
 
