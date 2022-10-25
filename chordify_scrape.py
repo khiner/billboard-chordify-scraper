@@ -2,6 +2,7 @@ import argparse
 import logging
 import os
 import re
+from time import sleep
 
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -91,28 +92,35 @@ def find_key_element(root):
 # If successful: Returns a tuple of `(key, chords)`, where `key` is a string, and `chords` is a list of strings.
 # If not successful: Throws error
 def get_song_data(result_element):
-    href = 'https://chordify.net' + result_element['href']
-    log('Navigating to {}'.format(href))
-    driver.get(href)
+    song_url = 'https://chordify.net' + result_element['href']
+    log('Navigating to {}'.format(song_url))
+    driver.get(song_url)
     log('Waiting for chords to appear')
-    WebDriverWait(driver, 8).until(expected_conditions.presence_of_element_located((By.CSS_SELECTOR, '#chordsArea .chord-label')))
+    chord_labels_selector = '#chordsArea .chords .chord:not(.nolabel) .chord-label'
+    WebDriverWait(driver, 8).until(expected_conditions.presence_of_element_located((By.CSS_SELECTOR, chord_labels_selector)))
+    # I hate waiting for an arbitrary length of time, but I've found a few chords load quickly, then the rest load shortly after.
+    # There's probably another element that we can look for that only shows up on this second load, but it's tricky to test.
+    sleep(2)
     root = BeautifulSoup(driver.page_source, 'html.parser')
     key_element = find_key_element(root)
     if not key_element:
-        raise RuntimeError('Could not find the key element on the URL: {}'.format(driver.current_url))
+        raise RuntimeError('Could not find the key element for song at: {}'.format(song_url))
 
     key_chord = find_chord(key_element)
     if not key_chord:
-        raise RuntimeError('Could not find the key on the URL: {}'.format(driver.current_url))
+        raise RuntimeError('Could not find the key for song at: {}'.format(song_url))
 
     # The 'nolabel' class is used as a placeholder for every beat the chord is held.
     # The meter is based on the current bar-length selected in the UI (which we do not interact with here).
     # We only want the elements _without_ a 'nolabel' class (not retaining any duration information).
-    chords_label_elements = root.select('#chordsArea .chords .chord:not(.nolabel) .chord-label')
+    chords_label_elements = root.select(chord_labels_selector)
     # An example class for a chord element is "chord-label label-G_min".
     # Grab every non-space character immediately following 'label-'.
     song_chords = [find_chord(element) for element in chords_label_elements]
-    return key_chord, [chord for chord in song_chords if chord is not None]  # Filter out any `None` values.
+    song_chords = [chord for chord in song_chords if chord is not None]  # Filter out any `None` values.
+    if len(song_chords) == 0:
+        raise RuntimeError('Found no chords for song at: {}'.format(song_url))
+    return key_chord, song_chords
 
 
 # This dataframe is modified, with each item getting new 'key' and 'chords' columns.
