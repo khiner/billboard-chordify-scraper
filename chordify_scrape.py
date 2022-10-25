@@ -3,6 +3,7 @@ import logging
 import os
 import re
 from time import sleep
+import urllib.parse
 
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -140,7 +141,9 @@ df['chords'] = ''  # Each value will be a JSON list of chords
 
 for year, records in df.groupby('year'):
     for record_index, record in records.head(args.topn).iterrows():  # Scrape chords for the top-N songs in each year
-        url = 'https://chordify.net/search/{} {}'.format(record['artist'], record['song'])
+        # Use `quote` to URL-encode the string.
+        # `safe=''` tells it to encode '/', which is common in combo artist names (https://stackoverflow.com/a/13625238).
+        url = 'https://chordify.net/search/' + urllib.parse.quote('{} {}'.format(record['artist'], record['song']), safe='')
         log('Navigating to {}'.format(url))
         driver.get(url)
 
