@@ -50,9 +50,18 @@ if set(df.columns) != columns:
 log('Creating Chrome driver...')
 options = webdriver.ChromeOptions()
 options.add_argument('--ignore-certificate-errors')
-options.add_argument('--incognito')
+# options.add_argument('--incognito')
 # options.add_argument('--headless')
 driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), chrome_options=options)
+
+# Here's an example of setting cookies to give chordify your session info to "sign in".
+# Comment out the 3 `driver...` lines below and put in your values.
+# (You can find them in Chrome (go to chordify.net) -> Devtools -> Application tab -> Storage -> Cookies -> http://chordify.net)
+# You'll need a premium account to get past the "You've hit your daily chord limit".
+# However, I've found we can still find chords that load in the background even with that banner in the foreground, but I wouldn't trust it.
+# driver.get('https://chordify.net/')
+# driver.add_cookie({'name': 'session_token', 'value': '0291f0d1ec2af7a1e8024c73bb4077c14e0a7326', 'domain': 'chordify.net'})
+# driver.add_cookie({'name': 'CID', 'value': '635559f2420756.49472117', 'domain': 'chordify.net', 'SameSite': 'Lax'})
 log('Chrome driver created.\n')
 
 
