@@ -45,15 +45,15 @@ log('Loading input file: {}'.format(billboard_csv))
 df = pd.read_csv(billboard_csv, parse_dates=['date'])
 
 columns = {'date', 'pos', 'pos_prev', 'pos_peak', 'artist', 'song', 'weeks'}
-if set(df.columns) != columns:
-    raise ValueError('Expected the Billboard CSV file to have the columns {}, but found {}'.format(columns, set(df.columns)))
+if not columns.issubset(set(df.columns)):
+    raise ValueError('Expected the Billboard CSV file to have at least columns {}, but found {}'.format(columns, set(df.columns)))
 
 log('Creating Chrome driver...')
 options = webdriver.ChromeOptions()
 options.add_argument('--ignore-certificate-errors')
-# options.add_argument('--incognito')
+options.add_argument('--incognito')
 # options.add_argument('--headless')
-driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), chrome_options=options)
+driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
 
 # Here's an example of setting cookies to give chordify your session info to "sign in".
 # Comment out the 3 `driver...` lines below and put in your values.
@@ -132,17 +132,23 @@ def get_song_data(song_url):
     return key_chord, song_chords
 
 
-# This dataframe is modified, with each item getting new 'key' and 'chords' columns.
-# records_by_year = dict(tuple(df.groupby('year')))
+# This dataframe is modified, with each item getting 'key' and 'chords' columns (if it doesn't already have them).
 df['year'] = df['date'].dt.year  # Temporary column.
-df['key'] = ''  # Each value will be a chord string
-df['chords'] = ''  # Each value will be a JSON list of chords
+if 'key' not in df:
+    df['key'] = ''  # Each value will be a chord string
+if 'chords' not in df:
+    df['chords'] = ''  # Each value will be a JSON list of chords
 
 for year, records in df.groupby('year'):
     for record_index, record in records.head(args.topn).iterrows():  # Scrape chords for the top-N songs in each year
+        artist, song = record['artist'], record['song']
+        if not pd.isnull(record['key']) and not pd.isnull(record['chords']):
+            log('{}: {} already has key and chords. Skipping.'.format(artist, song))
+            continue
+
         # Use `quote` to URL-encode the string.
         # `safe=''` tells it to encode '/', which is common in combo artist names (https://stackoverflow.com/a/13625238).
-        url = 'https://chordify.net/search/' + urllib.parse.quote('{} {}'.format(record['artist'], record['song']), safe='')
+        url = 'https://chordify.net/search/' + urllib.parse.quote('{} {}'.format(artist, song), safe='')
         log('Navigating to {}'.format(url))
         driver.get(url)
 
@@ -162,7 +168,7 @@ for year, records in df.groupby('year'):
                 if not result.find('span', text='Chordified') or result['href'] == '#':
                     continue  # Skip this result.
 
-                log('Getting result #{} for {}: {}'.format(result_index + 1, record['artist'], record['song']))
+                log('Getting result #{} for {}: {}'.format(result_index + 1, artist, song))
 
                 url = 'https://chordify.net' + result['href']
                 key, chords = get_song_data(url)
@@ -178,7 +184,8 @@ for year, records in df.groupby('year'):
                 logging.exception('Exception getting song data:')
         if 'key' not in record or 'chords' not in record:
             log('All {} results tried for {}: {}. Moving to next song without adding columns.'
-                .format(len(result_elements), record['artist'], record['song']))
+                .format(len(result_elements), artist, song))
+
     # Save the results so far after each year, to checkpoint in case something breaks.
     log('\nCheckpoint for year {}: Exporting CSV file with added "key" and "chords" columns to {}\n'.format(year, args.output))
     # Remove the temporary added 'year' column, and export to CSV.
