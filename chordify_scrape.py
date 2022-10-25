@@ -98,11 +98,10 @@ def find_key_element(root):
     return None
 
 
-# Navigate to result and get song data.
+# Navigate to the provided song URL and scrape the song data.
 # If successful: Returns a tuple of `(key, chords)`, where `key` is a string, and `chords` is a list of strings.
 # If not successful: Throws error
-def get_song_data(result_element):
-    song_url = 'https://chordify.net' + result_element['href']
+def get_song_data(song_url):
     log('Navigating to {}'.format(song_url))
     driver.get(song_url)
     log('Waiting for chords to appear')
@@ -150,11 +149,18 @@ for year, records in df.groupby('year'):
         # Wait for at least one result to show up.
         WebDriverWait(driver, 8).until(expected_conditions.presence_of_element_located((By.CSS_SELECTOR, 'section > a')))
         results_html = driver.page_source
-        result_elements = BeautifulSoup(results_html, 'html.parser').find('section').find_all('a', href=True)
+        result_elements = BeautifulSoup(results_html, 'html.parser').select('main > div > section > a')
         for result_index, result in enumerate(result_elements):
             try:
                 log('Getting result #{} for {}: {}'.format(result_index + 1, record['artist'], record['song']))
-                key, chords = get_song_data(result)
+
+                # Make sure the result has chords.
+                # Also, sometimes the first link we find isn't actually a link?
+                if not result.find('span', text='Chordified') or result['href'] == '#':
+                    continue  # Skip this result.
+
+                url = 'https://chordify.net' + result['href']
+                key, chords = get_song_data(url)
                 log('\tFound key and {} chords.'.format(len(chords)))
 
                 # Modify the main dataframe, adding the found values.
