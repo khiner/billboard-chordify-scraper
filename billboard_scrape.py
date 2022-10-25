@@ -41,8 +41,7 @@ parser.add_argument('-c', '--chart', type=str, required=False, default='100',
                     help='Default to "100" for the "Hot-100" list. Other option is "200" for "Billboard-200".')
 parser.add_argument('-o', '--output', type=str, required=False, default='billboard.csv',
                     help='The name of the output CSV file (including the .csv suffix). Defaults to "billboard.csv".')
-parser.add_argument('-v', '--verbose', type=bool, required=False, default=True,
-                    help='Verbose logging. Defaults to true.')
+parser.add_argument('-v', '--verbose', type=bool, required=False, default=True, help='Verbose logging. Defaults to true.')
 args = parser.parse_args()
 
 start_date_in = validate_date(args.start)

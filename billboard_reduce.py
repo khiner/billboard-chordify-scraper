@@ -13,8 +13,7 @@ parser.add_argument('-n', '--topn', type=int, required=False, default=100,
                     help='The number of top-charting songs (unique across all years) to export for each year. Defaults to 100.')
 parser.add_argument('-o', '--output', type=str, required=False, default='billboard_reduced.csv',
                     help='The name of the output CSV file (including the .csv suffix). Defaults to "billboard_reduced.csv".')
-parser.add_argument('-v', '--verbose', type=bool, required=False, default=True,
-                    help='Verbose logging. Defaults to true.')
+parser.add_argument('-v', '--verbose', type=bool, required=False, default=True, help='Verbose logging. Defaults to true.')
 args = parser.parse_args()
 
 
@@ -42,10 +41,12 @@ df.set_index('year', inplace=True)
 df['artist_song'] = df['artist'] + ': ' + df['song']
 
 # Reduce to top-N charting songs per year, remove the derived columns we added for processing, and use `filter` to reorder columns.
-df = df.sort_values(['year', 'pos_peak', 'weeks'], ascending=[True, True, False]) \
+df = df.sort_values(['year', 'pos', 'weeks'], ascending=[True, True, False]) \
     .drop_duplicates(['artist_song']) \
     .groupby(['year']).head(args.topn) \
-    .reset_index().drop(columns=['artist_song', 'year']).filter(columns)
+    .reset_index() \
+    .drop(columns=['artist_song', 'year']) \
+    .filter(columns)
 
 log('\nExporting reduced Billboard CSV file to {}'.format(args.output))
 df.to_csv(args.output, header=True, index=False)
