@@ -176,10 +176,10 @@ for year, records in df.groupby('year'):
         if 'key' not in record or 'chords' not in record:
             log('All {} results tried for {}: {}. Moving to next song without adding columns.'
                 .format(len(result_elements), record['artist'], record['song']))
-
-# Flatten the dataframe to a single level again, remove the temporary added 'year' column, and export to CSV.
-log('\nExporting CSV file with added "key" and "chords" columns to {}'.format(args.output))
-df.drop(columns=['year']).to_csv(args.output, header=True, index=False)
+    # Save the results so far after each year, to checkpoint in case something breaks.
+    log('\nCheckpoint for year {}: Exporting CSV file with added "key" and "chords" columns to {}\n'.format(year, args.output))
+    # Remove the temporary added 'year' column, and export to CSV.
+    df.drop(columns=['year']).to_csv(args.output, header=True, index=False)
 
 log('Closing Chrome driver...')
 driver.quit()
