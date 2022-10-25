@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 import re
 
@@ -62,13 +63,13 @@ def find_chord(chord_label_element):
     return match.group(1) if match else None
 
 
-# Ugh, this is nasty, but can't find a better way.
+# This is nasty, but can't find a better way.
+# The song's key is in a "Transpose" toolbar section.
+# Ideally, we'd just search for the <a> with the "Transpose" text, but that isn't working for me,
+# so we look for the element with the `transpose_text` below and locate this "Transpose" element relative to it.
+# Another complication is that this element appears in slightly different parts of the DOM for different songs :/
+# We don't get any help from any class names or IDs nearby, since they're all obfuscated.
 def find_key_element(root):
-    # The song's key is in a "Transpose" toolbar section.
-    # Ideally, we'd just search for the <a> with the "Transpose" text, but that isn't working for me,
-    # so we look for the element with the `transpose_text` below and locate this "Transpose" element relative to it.
-    # Another complication is that this element appears in slightly different parts of the DOM for different songs :/
-    # We don't get any help from any class names or IDs nearby, since they're all obfuscated.
     transpose_text = 'Change the chords by transposing the key'
     key_selector = 'span > a > span > span'  # Relative to a common ancestor in both cases
     transpose_element = root.find('div', text=transpose_text)
@@ -82,41 +83,58 @@ def find_key_element(root):
     return None
 
 
-records = df.to_dict('records')  # This list of dicts is modified, with each item getting new 'key' and 'chords' properties.
-for record in records[:5]:  # todo only trying the first 5 songs for now. Get rid of this limit when things are working better.
-    url = 'https://chordify.net/search/{} {}'.format(record['artist'], record['song'])
-    log('Navigating to {}'.format(url))
-    driver.get(url)
-
-    # Wait for at least one result to show up.
-    # todo wrap everything in an exception handler and try consecutive results in the list until one succeeds
-    result_element = WebDriverWait(driver, 10).until(expected_conditions.presence_of_element_located((By.CSS_SELECTOR, 'section > a')))
-    log('Clicking on first result')
-    result_element.click()
+# Navigate to result and get song data.
+# If successful: Returns a tuple of `(key, chords)`, where `key` is a string, and `chords` is a list of strings.
+# If not successful: Throws error
+def get_song_data(result_element):
+    href = 'https://chordify.net' + result_element['href']
+    log('Navigating to {}'.format(href))
+    driver.get(href)
     log('Waiting for chords to appear')
-    WebDriverWait(driver, 10).until(expected_conditions.presence_of_element_located((By.CSS_SELECTOR, '#chordsArea .chord-label')))
-    html = driver.page_source
-    root = BeautifulSoup(html, 'html.parser')
+    WebDriverWait(driver, 8).until(expected_conditions.presence_of_element_located((By.CSS_SELECTOR, '#chordsArea .chord-label')))
+    root = BeautifulSoup(driver.page_source, 'html.parser')
     key_element = find_key_element(root)
     if not key_element:
         raise RuntimeError('Could not find the key element on the URL: {}'.format(driver.current_url))
 
-    key = find_chord(key_element)
-    if not key:
+    key_chord = find_chord(key_element)
+    if not key_chord:
         raise RuntimeError('Could not find the key on the URL: {}'.format(driver.current_url))
-
-    log('Found key: {}'.format(key))
-    record['key'] = key
 
     # The 'nolabel' class is used as a placeholder for every beat the chord is held.
     # The meter is based on the current bar-length selected in the UI (which we do not interact with here).
     # We only want the elements _without_ a 'nolabel' class (not retaining any duration information).
     chords_label_elements = root.select('#chordsArea .chords .chord:not(.nolabel) .chord-label')
-    log('Found {} chord label elements'.format(len(chords_label_elements)))
     # An example class for a chord element is "chord-label label-G_min".
     # Grab every non-space character immediately following 'label-'.
-    chords = [find_chord(element) for element in chords_label_elements]
-    record['chords'] = [chord for chord in chords if chord is not None]  # Filter out any `None` values.
+    song_chords = [find_chord(element) for element in chords_label_elements]
+    return key_chord, [chord for chord in song_chords if chord is not None]  # Filter out any `None` values.
+
+
+records = df.to_dict('records')  # This list of dicts is modified, with each item getting new 'key' and 'chords' properties.
+for record in records[:10]:  # todo only trying the first 10 songs for now. Get rid of this limit when things are working better.
+    url = 'https://chordify.net/search/{} {}'.format(record['artist'], record['song'])
+    log('Navigating to {}'.format(url))
+    driver.get(url)
+
+    # Wait for at least one result to show up.
+    WebDriverWait(driver, 8).until(expected_conditions.presence_of_element_located((By.CSS_SELECTOR, 'section > a')))
+    results_html = driver.page_source
+    result_elements = BeautifulSoup(results_html, 'html.parser').find('section').find_all('a', href=True)
+    for result_index, result in enumerate(result_elements):
+        try:
+            log('Getting result #{} for {}: {}'.format(result_index + 1, record['artist'], record['song']))
+            key, chords = get_song_data(result)
+            log('\tFound key and chords: {}, {}'.format(key, chords))
+
+            record['key'] = key
+            record['chords'] = chords
+            break  # We successfully got the data for one of the search results. Move on to the next record.
+        except Exception:
+            logging.exception('Exception getting song data:')
+    if 'key' not in record or 'chords' not in record:
+        log('All {} results tried for {}: {}. Moving to next song without adding columns.'
+            .format(len(result_elements), record['artist'], record['song']))
 
 df = pd.DataFrame(records)
 df.to_csv(args.output, header=True, index=False)
