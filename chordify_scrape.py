@@ -147,17 +147,22 @@ for year, records in df.groupby('year'):
         driver.get(url)
 
         # Wait for at least one result to show up.
-        WebDriverWait(driver, 8).until(expected_conditions.presence_of_element_located((By.CSS_SELECTOR, 'section > a')))
+        results_selector = 'main > div > section > a'
+        try:
+            WebDriverWait(driver, 20).until(expected_conditions.presence_of_element_located((By.CSS_SELECTOR, results_selector)))
+        except TimeoutException:
+            log('Timed out getting results.')
+
         results_html = driver.page_source
-        result_elements = BeautifulSoup(results_html, 'html.parser').select('main > div > section > a')
+        result_elements = BeautifulSoup(results_html, 'html.parser').select(results_selector)
         for result_index, result in enumerate(result_elements):
             try:
-                log('Getting result #{} for {}: {}'.format(result_index + 1, record['artist'], record['song']))
-
                 # Make sure the result has chords.
                 # Also, sometimes the first link we find isn't actually a link?
                 if not result.find('span', text='Chordified') or result['href'] == '#':
                     continue  # Skip this result.
+
+                log('Getting result #{} for {}: {}'.format(result_index + 1, record['artist'], record['song']))
 
                 url = 'https://chordify.net' + result['href']
                 key, chords = get_song_data(url)
@@ -166,11 +171,9 @@ for year, records in df.groupby('year'):
                 # Modify the main dataframe, adding the found values.
                 df.at[record_index, 'key'] = key
                 df.at[record_index, 'chords'] = chords
-                # record['key'] = key
-                # record['chords'] = chords
                 break  # We successfully got the data for one of the search results. Move on to the next record.
             except TimeoutException:
-                log('Timed out.')
+                log('Timed out getting result. Trying next result.')
             except Exception:
                 logging.exception('Exception getting song data:')
         if 'key' not in record or 'chords' not in record:
