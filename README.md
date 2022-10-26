@@ -128,7 +128,7 @@ options:
 
 ```shell
 $ python chordify_scrape.py --help
-usage: chordify_scrape.py [-h] [-o OUTPUT] [-n TOPN] [-v VERBOSE] [billboard_csv]
+usage: chordify_scrape.py [-h] [-o OUTPUT] [-n TOPN] [-m MINCHORDS] [-v VERBOSE] [billboard_csv]
 
 positional arguments:
   billboard_csv         Path to input Billboard CSV file, as produced by `billboard_scrape.py` followed by `billboard_reduce.py`. Defaults to "billboard_reduced.csv".
@@ -139,6 +139,9 @@ options:
                         The name of the output CSV file (including the .csv suffix). Defaults to "chordify.csv".
   -n TOPN, --topn TOPN  The number of songs per year for which to scrape chords, starting at the first song for each year in the provided CSV. To scrape chords for all songs, just pass a number greater than or equal to the
                         max number of songs in any year. Defaults to 100.
+  -m MINCHORDS, --minchords MINCHORDS
+                        The minimum number of chord instances (not unique chord values!) a song must have in order to add to the dataset. A result with fewer chords than this limit will be skipped. If no results for a song
+                        meet this chord limit, the "chords" column for the song will be NaN. Defaults to 8.
   -v VERBOSE, --verbose VERBOSE
                         Verbose logging. Defaults to true.
 ```
