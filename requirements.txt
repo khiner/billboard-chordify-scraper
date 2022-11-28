@@ -1,4 +1,5 @@
 bs4
+music21
 pandas
 requests
 selenium
