@@ -199,6 +199,7 @@ for year, records in df.groupby('year'):
     # Save the results so far after each year, to checkpoint in case something breaks.
     log('\nCheckpoint for year {}: Exporting CSV file with added "key" and "chords" columns to {}\n'.format(year, args.output))
     # Remove the temporary added 'year' column, and export to CSV.
+    df['chords'].fillna('"[]"', inplace=True)
     df.drop(columns=['year']).to_csv(args.output, header=True, index=False)
 
 log('Closing Chrome driver...')
