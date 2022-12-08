@@ -1,6 +1,19 @@
-# billboard-chordify-scraper
+# Billboard/Chordify web scraper
 
 Scrape chords for billboard hot-100/top-200 songs.
+Also includes several CSV files, including a [joint Billbaord/Chordify CSV](https://raw.githubusercontent.com/khiner/billboard-chordify-scraper/main/chordify_with_rn_200_1991-01-05_to_2022-10-01.csv) with roman numeral chord sequences for 6,400 songs (200 top-charting songs in the years 1991-2022).
+
+Builds on [Beach Clark's work](https://github.com/bclark288/alternative-measures) for his and Claire Arthur's [Alternative Measures: A Musicologist Workbench for Popular Music](https://www.smc2019.uma.es/articles/S6/S6_05_SMC2019_paper.pdf).
+
+See the following notebooks to get a better understanding of the data:
+* [ExploreBillboardData](https://colab.research.google.com/github/khiner/billboard-chordify-scraper/blob/main/ExploreBillboardData.ipynb)
+* [ExploreRomanNumerals](https://colab.research.google.com/github/khiner/billboard-chordify-scraper/blob/main/ExploreRomanNumerals.ipynb)
+
+See the [AddRomanNumerals notebook](https://colab.research.google.com/github/khiner/billboard-chordify-scraper/blob/main/AddRomanNumerals.ipynb), which is used to add the roman numerals to the Billboard dataset.
+The rest of the processing id done in actual (raw python) scripts, as documented below.
+
+This is for a final group project for MUSI-8803: Computational Musicology at GA Tech, and includes work from myself, Brittney Allen, and Sile Yin.
+See the [final presentation slides](https://docs.google.com/presentation/d/1RnGAaa67iWnUoTTuk1r8DKIj7NXP64Aj8sNEKNuZ6QE) for more details.
 
 ## Install and run
 
